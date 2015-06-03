@@ -1,0 +1,10 @@
+[user]
+email = lois.postula@ulb.ac.be
+name = Loïs Postula
+[core]
+editor = vim
+[color]
+ui = auto
+interactive = auto
+[push]
+default = simple
