@@ -25,6 +25,7 @@ Plugin 'rodjek/vim-puppet'
 Plugin 'Absolight/vim-bind'
 Plugin 'lukerandall/haskellmode-vim'
 Plugin 'tpope/vim-rails'
+Plugin 'terryma/vim-expand-region'
 filetype plugin indent on
 
 
@@ -50,6 +51,11 @@ nmap <leader>p :CtrlP<cr>
 
 "Change leader to space
 let mapleader = "\<Space>"
+"Set save to leader w
+nnoremap <Leader>w :w<CR>
+"using vim expand region to ameliorate the expension with v and ctrl v
+vmap v <Plug>(expand_region_expand)
+vmap <C-v> <Plug>(expand_region_shrink)
 
 
 nmap <leader>bb :CtrlPBuffer<cr>
