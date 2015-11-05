@@ -48,6 +48,10 @@ let g:ctrlp_custom_ignore = {
 let g:ctrlp_working_oath_mode = 'r'
 nmap <leader>p :CtrlP<cr>
 
+"Change leader to space
+let mapleader = "\<Space>"
+
+
 nmap <leader>bb :CtrlPBuffer<cr>
 nmap <leader>bm :CtrlPMixed<cr>
 nmap <leader>bs :CtrlPMRU<cr>
