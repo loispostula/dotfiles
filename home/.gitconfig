@@ -3,6 +3,7 @@ email = lois.postula@ulb.ac.be
 name = Loïs Postula
 [core]
 editor = vim
+	autocrlf = input
 [color]
 ui = auto
 interactive = auto

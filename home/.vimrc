@@ -26,9 +26,18 @@ Plugin 'Absolight/vim-bind'
 Plugin 'lukerandall/haskellmode-vim'
 Plugin 'tpope/vim-rails'
 Plugin 'terryma/vim-expand-region'
+Plugin 'janko-m/vim-test'
+Plugin 'benmills/vimux'
 filetype plugin indent on
 
-
+"Python testing
+nmap <silent> <leader>t :TestNearest<CR>
+nmap <silent> <leader>T :TestFile<CR>
+nmap <silent> <leader>a :TestSuite<CR>
+nmap <silent> <leader>l :TestLast<CR>
+nmap <silent> <leader>g :TestVisit<CR>
+let test#strategy = "vimux"
+let test#python#runner = 'pytest'
 
 "for haskell
 let g:haddock_browser="/usr/bin/google-chrome"
