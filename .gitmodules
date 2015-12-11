@@ -1,0 +1,3 @@
+[submodule "home/.tmux/tcm"]
+	path = home/.tmux/tcm
+	url = https://github.com/nhdaly/tmux-scroll-copy-mode
