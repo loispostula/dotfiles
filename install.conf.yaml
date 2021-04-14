@@ -1,18 +1,29 @@
-- clean: ['~']
+- defaults:
+    link:
+      create: true
+      relink: true
+
+- clean: ['~',]
+
 
 - link:
+    ~/.config/systemd/user/ssh-agent.service:
+      path: config/systemd/user/ssh-agent.service
+      create: true
+    ~/.config/systemd/user/gpg-agent.service:
+      path: config/systemd/user/gpg-agent.service
+      create: true
     ~/.profile: profile
     ~/.gitconfig: gitconfig
+    ~/.shell:
     ~/.ssh/config:
         path: ssh/config
         create: true
     ~/.vimrc: vimrc
-    ~/.zshrc: zshrc
+    ~/.zshrc:
+    ~/.zsh:
     ~/.xinitrc: xinitrc
 
-
-- clean: ['~']
-
-- link:
-
-
+- shell:
+  - systemctl daemon-reload --user && systemctl enable --user ssh-agent && systemctl start --user ssh-agent
+  - systemctl daemon-reload --user && systemctl enable --user gpg-agent && systemctl start --user gpg-agent

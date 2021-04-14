@@ -1,34 +1,42 @@
-# Powerline Go
-zmodload zsh/datetime
+# Functions
+source ~/.shell/functions.sh
 
-function preexec() {
-  __TIMER=$EPOCHREALTIME
-}
-
-function powerline_precmd() {
-  local __ERRCODE=$?
-  local __DURATION=0
-
-  if [ -n $__TIMER ]; then
-    local __ERT=$EPOCHREALTIME
-    __DURATION="$(($__ERT - ${__TIMER:-__ERT}))"
-  fi
-
-  eval "$(powerline-go -error $__ERRCODE -duration $__DURATION -shell zsh -eval -modules-right duration,aws,docker,docker-context,kube -jobs ${${(%):%j}:-0})"
-
-  unset __TIMER
-}
-
-function install_powerline_precmd() {
-  for s in "${precmd_functions[@]}"; do
-    if [ "$s" = "powerline_precmd" ]; then
-      return
-    fi
-  done
-  precmd_functions+=(powerline_precmd)
-}
-
-if [ "$TERM" != "linux" ] && [ -f "/usr/bin/powerline-go" ]; then
-    install_powerline_precmd
+# Allow local customizations in the ~/.shell_local_before file
+if [ -f ~/.shell_local_before ]; then
+    source ~/.shell_local_before
 fi
 
+# Allow local customizations in the ~/.zshrc_local_before file
+if [ -f ~/.zshrc_local_before ]; then
+    source ~/.zshrc_local_before
+fi
+
+# Settings
+source ~/.zsh/settings.zsh
+
+# Key bindings
+source ~/.zsh/key-bindings.zsh
+
+# External settings
+source ~/.shell/external.sh
+
+# Aliases
+source ~/.shell/aliases.sh
+
+# Custom prompt
+source ~/.zsh/prompt.zsh
+
+# Allow local customizations in the ~/.shell_local_after file
+if [ -f ~/.shell_local_after ]; then
+    source ~/.shell_local_after
+fi
+
+# Allow local customizations in the ~/.zshrc_local_after file
+if [ -f ~/.zshrc_local_after ]; then
+    source ~/.zshrc_local_after
+fi
+
+# Allow private customizations (not checked in to version control)
+if [ -f ~/.shell_private ]; then
+    source ~/.shell_private
+fi
