@@ -1,0 +1,12 @@
+[user]
+	name = Loïs Postula
+	email = lois@postu.la
+	signingkey = BBE17CD415B33DA1
+[init]
+	defaultBranch = main
+[commit]
+	gpgsign = true
+[gpg]
+	program = /usr/bin/gpg
+[core]
+	editor = nvim
