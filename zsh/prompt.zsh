@@ -13,7 +13,7 @@ function powerline_precmd() {
     __DURATION="$(($__ERT - ${__TIMER:-__ERT}))"
   fi
 
-  eval "$(powerline-go -error $__ERRCODE -duration $__DURATION -shell zsh -eval -modules-right duration,aws,docker,docker-context,kube -jobs ${${(%):%j}:-0})"
+  eval "$($GOPATH/bin/powerline-go -error $__ERRCODE -duration $__DURATION -shell zsh -eval -modules-right duration,aws,docker,docker-context,kube -jobs ${${(%):%j}:-0})"
 
   unset __TIMER
 }
@@ -27,7 +27,7 @@ function install_powerline_precmd() {
   precmd_functions+=(powerline_precmd)
 }
 
-if [ "$TERM" != "linux" ] && [ -f "/usr/bin/powerline-go" ]; then
+if [ "$TERM" != "linux" ] && [ -f "$GOPATH/bin/powerline-go" ]; then
     install_powerline_precmd
 fi
 

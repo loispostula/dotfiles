@@ -23,8 +23,12 @@ source ~/.shell/external.sh
 # Aliases
 source ~/.shell/aliases.sh
 
+# Path
+source ~/.shell/path.sh
+
 # Custom prompt
 source ~/.zsh/prompt.zsh
+
 
 # Allow local customizations in the ~/.shell_local_after file
 if [ -f ~/.shell_local_after ]; then
