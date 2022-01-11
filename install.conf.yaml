@@ -23,7 +23,10 @@
     ~/.zshrc:
     ~/.zsh:
     ~/.xinitrc: xinitrc
+    ~/.emacs.d: emacs
 
 - shell:
+  - mkdir -p ~/.cache/emacs
+  - mkdir -p ~/.local/share/emacs
   - systemctl daemon-reload --user && systemctl enable --user ssh-agent && systemctl start --user ssh-agent
-  - systemctl daemon-reload --user && systemctl enable --user gpg-agent && systemctl start --user gpg-agent
+    #  - systemctl daemon-reload --user && systemctl enable --user gpg-agent && systemctl start --user gpg-agent

@@ -2,3 +2,6 @@
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
 	ignore = dirty
+[submodule "emacs/contrib/no-littering"]
+	path = emacs/contrib/no-littering
+	url = https://github.com/emacscollective/no-littering.git

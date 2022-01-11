@@ -5,10 +5,10 @@
 [init]
 	defaultBranch = main
 [commit]
-	gpgsign = true
+	gpgsign = false
 [gpg]
 	program = /usr/bin/gpg
 [core]
-	editor = nvim
+	editor = vim
 [pull]
 	rebase = false

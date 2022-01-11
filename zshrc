@@ -11,6 +11,9 @@ if [ -f ~/.zshrc_local_before ]; then
     source ~/.zshrc_local_before
 fi
 
+# XDG 
+#source ~/.shell/xdg.sh
+
 # Settings
 source ~/.zsh/settings.zsh
 

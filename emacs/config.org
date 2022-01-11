@@ -1,0 +1,538 @@
+#+AUTHOR: Loïs Postula
+#+TITLE: GNU Emacs Configuration
+
+* Table of Contents  :TOC:
+- [[#configuration-profiling][Configuration Profiling]]
+- [[#general-settings][General Settings]]
+  - [[#start-of-week-is-monday][Start of week is Monday]]
+  - [[#truncate-lines][Truncate Lines]]
+  - [[#append-and-update-time-stamps-for-time-stamp--in-headers][Append and update time-stamps for =Time-stamp: <>= in headers]]
+  - [[#inhibit-startup-screen][Inhibit Startup Screen]]
+  - [[#make-cursor-the-width-of-the-character-it-is-under-ie-full-width-of-a-tab][Make cursor the width of the character it is under; i.e. full width of a TAB:]]
+  - [[#yes-or-no-p-prefer-yn][yes-or-no-p: prefer y/n]]
+  - [[#avoid-the-ensure-keyword-for-each-package][Avoid the =:ensure= keyword for each package]]
+  - [[#only-one-window-at-startup][Only one window at startup]]
+- [[#initialisation][Initialisation]]
+  - [[#packages][Packages]]
+- [[#no-littering][No Littering]]
+- [[#logging][Logging]]
+- [[#alerts][Alerts]]
+- [[#binaries-lookup][Binaries Lookup]]
+  - [[#lp-binary-foundbinaryname][lp-binary-found(binaryname)]]
+  - [[#lp-binary-not-found-list-and-lp-eval-if-binary-or-warn][lp-binary-not-found-list and lp-eval-if-binary-or-warn()]]
+  - [[#some-binary-test][Some binary test]]
+- [[#theming][Theming]]
+  - [[#icons][Icons]]
+  - [[#theme][Theme]]
+- [[#programming][Programming]]
+  - [[#lsp][LSP]]
+  - [[#lsp-ui][LSP-UI]]
+  - [[#auto-completions][Auto-Completions]]
+  - [[#indentations][Indentations]]
+  - [[#languages-specific-settings][Languages Specific Settings]]
+- [[#helper-functions][Helper functions]]
+  - [[#lp-buffer-existsbufname][lp-buffer-exists(bufname)]]
+- [[#ledger][Ledger]]
+  - [[#emacs-setup][Emacs Setup]]
+- [[#org-mode][Org mode]]
+  - [[#load-orgmode][Load Orgmode]]
+  - [[#start-configuration][Start Configuration]]
+  - [[#general-configuration][General Configuration]]
+  - [[#contacts][Contacts]]
+  - [[#agenda][Agenda]]
+  - [[#end-configuration][End Configuration]]
+- [[#capture][Capture]]
+- [[#autostart][Autostart]]
+- [[#closing-and-end-for-profiling][Closing and end for profiling]]
+
+* Configuration Profiling
+#+begin_src emacs-lisp
+  (defvar lp-config-el-start-time (current-time) "Time when config.el was started")
+#+end_src
+* General Settings
+** Start of week is Monday
+#+BEGIN_SRC emacs-lisp
+(setq-default calendar-week-start-day 1)
+#+END_SRC
+** Truncate Lines
+#+begin_src emacs-lisp
+(setq-default truncate-lines t)
+#+end_src
+** Append and update time-stamps for =Time-stamp: <>= in headers
+#+BEGIN_SRC emacs-lisp
+(add-hook 'write-file-hooks 'time-stamp)
+#+END_SRC
+** Inhibit Startup Screen
+#+begin_src emacs-lisp
+(setq inhibit-startup-screen t)
+#+end_src
+** Make cursor the width of the character it is under; i.e. full width of a TAB:
+#+BEGIN_SRC emacs-lisp
+(setq x-stretch-cursor t)
+#+END_SRC
+** yes-or-no-p: prefer y/n
+#+begin_src emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+end_src
+** Avoid the =:ensure= keyword for each package 
+#+begin_src emacs-lisp
+(setq-default use-package-always-ensure t)
+#+end_src
+** Only one window at startup
+#+begin_src emacs-lisp
+  ;; Only one window on startup
+  (add-hook 'emacs-startup-hook 'delete-other-windows t)
+#+end_src
+* Initialisation
+** Packages
+*** General Configuration
+#+BEGIN_SRC emacs-lisp
+  (setq package-user-dir (concat lp-user-emacs-directory "elpa"))
+  (require 'package)
+  (package-initialize)
+#+END_SRC
+*** Sources
+**** Melpa
+#+BEGIN_SRC emacs-lisp
+  (setq package-archives '(
+			    ("melpa" . "https://melpa.org/packages/")
+			    ("gnu" . "https://elpa.gnu.org/packages/")
+			    ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+			  ))
+#+END_SRC
+*** Initialisation
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(use-package use-package-ensure-system-package :ensure t)
+#+END_SRC
+*** Package Manager
+#+BEGIN_SRC emacs-lisp
+;; Bootstrap straight
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Integrates `straight' directly into the `use-package' package through the
+;; `:straight' expression.
+(straight-use-package 'use-package)
+#+END_SRC
+* No Littering
+
+
+
+Let's make sure Emac's is not polluting it's configuration directory
+
+This is taken from [[https://github.com/novoid/dot-emacs/blob/master/config.org#no-littering][novoid's emacs configuration]] and https://github.com/tarsius/no-littering
+
+It sets some default paths in order to separate automatically created
+files and directories.
+
+#+BEGIN_SRC emacs-lisp
+(use-package no-littering
+  :load-path (lambda () (expand-file-name (concat lp-user-emacs-directory "contrib/no-littering/")))
+  )
+(require 'no-littering)
+#+END_SRC
+* Logging
+#+begin_src emacs-lisp
+ (setq lp-log-file (concat no-littering-var-directory "log/emacs.log"))
+ (defun lp-log (message)
+   (interactive)
+   (let ((current-timestamp
+        (concat
+          (format-time-string "%Y-%m-%dT%T")
+          ((lambda (x) (concat (substring x 0 3) ":" (substring x 3 5)))
+          (format-time-string "%z")))
+        ))
+  (write-region
+    (concat (format-message "%s %s: %s\n" current-timestamp system-name message))
+     nil lp-log-file "append"))
+)
+#+end_src
+* Alerts
+#+begin_src emacs-lisp
+  (use-package alert
+    :ensure t
+    :config
+     (setq alert-default-style 'libnotify)
+     (setq alert-persist-idle-time 60)
+     )
+(defun my-alert (mymessage)
+"wrapper for high-prio (sticky?) alert"
+   (interactive)
+   (when (not noninteractive)
+     ;; only in interactive mode:
+
+     (setq mymessage (concat mymessage "\n\n" (concat
+         (format-time-string "%Y-%m-%dT%T")
+         ((lambda (x) (concat (substring x 0 3) ":" (substring x 3 5)))
+             (format-time-string "%z")))))
+     (message mymessage)
+     (alert mymessage :severity 'high))
+)
+
+(defun my-flash (mymessage)
+"wrapper for low-prio (non-sticky) alert flash"
+   (interactive)
+   (when (not noninteractive)
+     ;; only in interactive mode:
+
+     (setq mymessage (concat mymessage "\n\n" (concat
+         (format-time-string "%Y-%m-%dT%T")
+         ((lambda (x) (concat (substring x 0 3) ":" (substring x 3 5)))
+             (format-time-string "%z")))))
+     (message mymessage)
+     (alert mymessage))
+)
+#+end_src
+* Binaries Lookup
+Let's define functions that can help us locate a binary and output a warning if the binary is not found
+
+This is taken from [[https://github.com/novoid/dot-emacs/blob/master/config.org#no-littering][novoid's emacs configuration]].
+
+** lp-binary-found(binaryname)
+=lp-binary-found(binaryname)= returns the path where a binary executable can be found within the exec-path.
+
+It also checks certain operatin system/binary combinations which aren't likely in the exec-path
+#+begin_src emacs-lisp
+(defun lp-binary-found(binaryname)
+  (cond
+    (t
+      (locate-file binaryname exec-path exec-suffixes 1))
+  ))
+#+end_src
+
+** lp-binary-not-found-list and lp-eval-if-binary-or-warn()
+
+=lp-eval-if-binary-or-warn (binaryname &optional warningtext)= checks if a binary can be found in the path via =lp-binary-found()=.
+
+If not found, a warning message is printed which can be defined as an optional parameter as well. Additionally, the not found binaries are collected in the variable =lp-binary-not-found-list=. 
+#+begin_src emacs-lisp
+  (defvar lp-binary-not-found-list nil
+    "Holds a list of binaries which could be not found via lp-eval-if-binary-or-warn()"
+    )
+
+  (defun lp-eval-if-binary-or-warn (binaryname &optional warningtext)
+    (or warningtext (setq warningtext (concat "»»» I could not locate the PATH-binary for: " binaryname)))
+    (let* ((binarypath (lp-binary-found binaryname)))
+      (if binarypath
+         ;; binary was found in exec-path
+         (concat binarypath)
+         (progn
+	   ;; binary NOT found in exec-path:
+	   (message warningtext)
+	   (if lp-binary-not-found-list
+	       (add-to-list 'lp-binary-not-found-list binaryname)
+	       (setq lp-binary-not-found-list (list binaryname))
+	       )
+	   )
+	   )))
+#+end_src
+
+** Some binary test
+#+begin_src emacs-lisp
+(lp-eval-if-binary-or-warn "firefox")
+(lp-eval-if-binary-or-warn "grep")
+(lp-eval-if-binary-or-warn "ls" "Could not find ls in path")
+#+end_src
+
+* Theming
+** Icons
+#+begin_src emacs-lisp
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :commands all-the-icons-install-fonts
+  :config (unless (find-font (font-spec :name "all-the-icons"))
+            (all-the-icons-install-fonts t)))
+#+end_src
+** Theme
+ #+begin_src emacs-lisp
+ (use-package doom-themes
+   :config
+   (load-theme 'doom-tomorrow-night t)
+   (doom-themes-org-config))
+
+ (use-package doom-modeline
+   :init (doom-modeline-mode)
+   :custom
+   (doom-modeline-icon (display-graphic-p))
+   (doom-modeline-mu4e t))
+
+ (use-package solaire-mode
+   :defer 0.1
+   :custom (solaire-mode-remap-fringe t)
+   :config (solaire-global-mode))
+ #+end_src
+
+* Programming
+** LSP 
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :ensure t
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :commands lsp
+)
+#+end_src
+** LSP-UI
+#+begin_src emacs-lisp
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode
+    :hook (lsp-mode . lsp-ui-mode)
+	:config
+	(setq lsp-ui-sideline-enable t)
+	(setq lsp-ui-sideline-show-hover nil)
+	(setq lsp-ui-doc-position 'bottom)
+	;; lsp config stuff
+	(setq lsp-enable-links t)
+	(setq lsp-signature-render-documentation t)
+	(setq lsp-headerline-breadcrumb-enable t)
+	(setq lsp-ui-doc-enable t)
+	(setq lsp-completion-enable-additional-text-edit nil)
+	(setq web-mode-enable-current-element-highlight t)
+	(lsp-ui-doc-show)		
+    )
+#+end_src
+** Auto-Completions
+#+begin_src emacs-lisp
+(use-package company
+  :ensure t
+  :config
+  (setq company-idle-delay 0)
+  (setq company-minimum-prefix-length 1)
+
+  (add-hook 'after-init-hook 'global-company-mode)
+)
+  
+#+end_src
+** Indentations
+Let's use the =aggressive indentations= package
+#+begin_src emacs-lisp
+(use-package aggressive-indent
+  :custom (aggressive-indent-comments-too t))
+#+end_src
+** Languages Specific Settings
+*** Elisp (emacs-lisp)
+**** Indentations
+#+begin_src emacs-lisp
+  (add-hook
+   'emacs-lisp-mode-hook #'aggressive-indent-mode
+   )
+#+end_src
+**** Parenthesis
+Do not use [[https://www.emacswiki.org/emacs/AutoFillMode][Auto Fill Mode]] for Lisp mode:
+#+BEGIN_SRC emacs-lisp
+(add-hook 'emacs-lisp-mode-hook 'turn-off-auto-fill)
+#+END_SRC
+
+When editing code that uses parenthesis, enabling this does highlight
+the matching parenthesis:
+#+BEGIN_SRC emacs-lisp
+(show-paren-mode t)
+#+END_SRC
+
+Enable electric pairs
+#+begin_src emacs-lisp
+  (electric-pair-mode 1)
+#+end_src
+* Helper functions
+** lp-buffer-exists(bufname)
+Checks wether or not a buffer exists
+#+begin_src emacs-lisp
+  (defun lp-buffer-exists (bufname)
+    (not  (eq nil (get-buffer bufname)))
+    )
+#+end_src
+* Ledger
+Ledger is a tool used to track money, using a double entry accounting system. Let's give it a shot
+** Emacs Setup
+#+begin_src emacs-lisp
+  (use-package ledger-mode
+    :mode ("\\.\\(dat\\|\\.ledger\\)\\'")
+    :preface
+    (defun lp/ledger-save ()
+	    "Clear the ledger buffer at each save."
+	    (interactive)
+	    (ledger-mode-clean-buffer)
+	    (save-buffer))
+    :bind (:map ledger-mode-map
+		("C-x C-s" . lp/ledger-save))
+    :custom
+    ;;(ledger-clear-whole-transactions t)
+    (ledger-reconcile-default-commodity "EUR")
+    (ledger-post-amount-alignment-column 65)
+    )
+#+end_src
+* Org mode
+** Load Orgmode
+#+begin_src emacs-lisp
+  (straight-use-package 'org)
+  (use-package org
+    :ensure org-contrib)
+#+end_src
+** Start Configuration
+This section deals with profiling and debugging start of the configuration
+#+begin_src emacs-lisp
+  (defvar lp-org-config-start-time (current-time) "Time when org-mode config was started")
+  (message "★→ Org-mode")
+#+end_src
+** General Configuration
+*** Org File Path
+#+begin_src emacs-lisp
+  (setq lp-org-files-path "~/org/")
+#+end_src
+*** Assign file extensions to Org-mode
+#+begin_src emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.\\(org\\|org_archive\\|txt\\)$" . org-mode)) 
+#+end_src
+*** Associate file without an auto-mode alist entry to =org-mode=
+#+begin_src emacs-lisp
+  (add-to-list 'auto-mode-alist '("'" . org-mode) t)
+#+end_src
+*** Enable Clean View
+=Clean View= allows org mode to use indentation to separate headings levels
+#+begin_src org
+  
+#+end_src
+*** Nice looking bullets for headings
+#+begin_src emacs-lisp
+  (use-package org-bullets
+    :ensure t
+    :config
+    (add-hook 'org-mode-hook  (lambda () (org-bullets-mode 1)))
+    )
+#+end_src
+*** Enhanced highlighting of Babel Blocks
+#+begin_src emacs-lisp
+  (defface org-block
+    '((t (:background "#1a1a1a")))
+    "Face used for the source block blackground.")
+#+end_src
+*** TOC
+Automatically uip[date the table of contentes of a =.org= files. Only need to add =:TOC= tag to the first heading of these table of contents
+#+begin_src emacs-lisp
+  (use-package toc-org
+    :after org
+    :hook (org-mode . toc-org-enable)
+    )
+#+end_src
+** Contacts
+#+begin_src emacs-lisp
+  (use-package org-contacts
+    :after org
+    :ensure nil
+    :custom
+    (org-contacts-address-property "CITY")
+    (org-contacts-birthday-property "BIRTHDAY")
+    (org-contacts-files (list (concat lp-org-files-path "contacts.org")))
+    )
+#+end_src
+** Agenda
+**** Agenda Files
+***** Work files
+#+begin_src emacs-lisp
+  (setq lp-work-agenda-files (append ` (
+					,(concat lp-org-files-path "fmsc.org")
+					)))
+#+end_src
+***** Non work Files
+#+begin_src emacs-lisp
+  (setq lp-non-work-agenda-files ( append ` (
+					     ,(concat lp-org-files-path "misc.org")
+					     ,(concat lp-org-files-path "projects.org")
+					     ,(concat lp-org-files-path "notes.org")
+					     ,(concat lp-org-files-path "contacts.org")
+					     ,(concat lp-org-files-path "agenda/calendar.org")
+					     ,(concat lp-org-files-path "agenda/work.org")
+					     ,(concat lp-org-files-path "agenda/routine.org")
+					     ,(concat lp-org-files-path "agenda/review.org")
+					     ,(concat lp-org-files-path "agenda/people.org")
+					     ,(concat lp-org-files-path "agenda/organizer.org")
+					     )))
+#+end_src
+***** All Agenda Files
+ #+begin_src emacs-lisp
+  (setq org-agenda-files (append lp-work-agenda-files lp-non-work-agenda-files))
+ #+end_src
+**** Settings
+***** Agenda Groups
+#+begin_src emacs-lisp
+  (setq  org-agenda-compact-blocks  t)
+#+end_src
+***** Compact Agenda view
+#+begin_src emacs-lisp :tangle no
+  (setq  org-agenda-compact-blocks  t)
+#+end_src
+**** Helper functions
+***** super-agenda
+#+begin_src emacs-lisp
+  (use-package org-agenda
+    :ensure nil
+    :after org
+    :custom
+    (org-agenda-prefix-format '((agenda . " %i %-20:c%?-12t%-6e% s")
+				(todo   . " %i %-20:c %-6e")
+				(tags   . " %i %-20:c")
+				(search . " %i %-20:c"))))
+
+  (setq org-agenda-custom-commands
+      '(("d" "Today's Tasks"
+	 ((agenda "" ((org-agenda-span 1)
+		      (org-agenda-overriding-header "Today's Tasks")))))))
+  (global-set-key (kbd "C-c a") #'org-agenda)
+#+end_src
+** End Configuration
+#+begin_src emacs-lisp
+  (message "→★ orgmode finished in %.2fs" (float-time (time-subtract (current-time) lp-org-config-start-time)))
+#+end_src
+* Capture
+Capture is used for template management
+#+begin_src emacs-lisp
+  (use-package org-capture
+    :ensure nil
+    :after org
+    :preface
+    (defvar lp/org-ledger-visa-template "%(org-read-date) %^{Payee}
+    Expenses:%^{Account}  %^{Amount} EUR
+    Liabilities:Visa:Postula Conceptions:Main  %^{Amount} EUR" "Template for credit card transaction with ledger.")
+
+    :custom
+    (org-capture-templates
+     `(("l" "Ledger")
+       ("lv" "Visa" plain (file ,(format "~/org/ledger/ledger-%s.dat" (format-time-string "%Y"))),
+	lp/org-ledger-visa-template
+	:empty-lines 1
+	:immediate-finish t))))
+
+(global-set-key (kbd "C-c c") #'org-capture)
+#+end_src
+* Autostart
+At the end of the configuration, let's execute some things
+#+begin_src emacs-lisp
+  (message "→★ finished loading config.org (w/o autostart) in %.2fs" (float-time (time-subtract (current-time) lp-config-el-start-time)))
+
+  (lp-log "Interactive Emacs is started")
+
+  (message "Creating agenda...")
+#+end_src
+* Closing and end for profiling
+This is the end of the elisp blocks to be tangled. Finishing up loading the configuration:
+#+begin_src emacs-lisp
+  (setq lp-config-el-loading-time (float-time (time-subtract (current-time) lp-config-el-start-time)))
+  (my-flash (format-message "Not found here:\n%s" lp-binary-not-found-list))
+  (my-flash (format-message "Emacs boot finished\n(took %.2fs)" lp-config-el-loading-time))
+  (message "»»» Binaries not found in checks above: %s" lp-binary-not-found-list)
+  (message "→★ finished loading config.org in %.2fs" lp-config-el-loading-time)
+#+end_src

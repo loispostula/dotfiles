@@ -13,7 +13,7 @@ function powerline_precmd() {
     __DURATION="$(($__ERT - ${__TIMER:-__ERT}))"
   fi
 
-  eval "$($GOPATH/bin/powerline-go -error $__ERRCODE -duration $__DURATION -shell zsh -eval -modules-right duration,aws,docker,docker-context,kube -jobs ${${(%):%j}:-0})"
+  eval "$($GOPATH/bin/powerline-go -error $__ERRCODE -duration $__DURATION -shell zsh -eval -modules-right duration,aws,docker,docker-context,terraform-workspace,kube -jobs ${${(%):%j}:-0})"
 
   unset __TIMER
 }

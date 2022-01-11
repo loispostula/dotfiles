@@ -1,5 +1,4 @@
 Host ssh.dev.azure.com
   IdentitiesOnly yes
-  IdentityFile ~/.ssh/id_rsa_yubikey.pub
   AddKeysToAgent yes
   User git
