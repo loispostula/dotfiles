@@ -77,5 +77,15 @@ Note the weekly scope of the command's precision.")
 
 
 (custom-set-variables
-
-)
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-agenda-files
+   '("/home/lpostula/org/tickler.org" "/home/lpostula/org/misc.org" "/home/lpostula/org/projects.org" "/home/lpostula/org/notes.org" "/home/lpostula/org/contacts.org" "/home/lpostula/org/agenda/calendar.org" "/home/lpostula/org/agenda/work.org" "/home/lpostula/org/agenda/routine.org" "/home/lpostula/org/agenda/review.org" "/home/lpostula/org/agenda/people.org" "/home/lpostula/org/agenda/organizer.org")))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(vertico-current ((t (:background "#1d1f21")))))

@@ -1,4 +1,22 @@
+AddKeysToAgent yes
+
+Host k3s-master
+  HostName 192.168.2.181
+
+Host k3s-node-1
+  HostName 192.168.2.167
+
+Host udm
+  HostName 192.168.2.1
+  IdentitiesOnly yes
+  User root
+  HostKeyAlgorithms +ssh-rsa
+  PubkeyAcceptedKeyTypes +ssh-rsa
+  IdentityFile ~/.ssh/id_rsa 
+  
 Host ssh.dev.azure.com
   IdentitiesOnly yes
-  AddKeysToAgent yes
   User git
+  HostKeyAlgorithms +ssh-rsa
+  PubkeyAcceptedKeyTypes +ssh-rsa
+  IdentityFile ~/.ssh/id_rsa 

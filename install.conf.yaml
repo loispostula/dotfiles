@@ -7,11 +7,8 @@
 
 
 - link:
-    ~/.config/systemd/user/ssh-agent.service:
-      path: config/systemd/user/ssh-agent.service
-      create: true
-    ~/.config/systemd/user/gpg-agent.service:
-      path: config/systemd/user/gpg-agent.service
+    ~/.config/systemd/user:
+      path: config/systemd/user
       create: true
     ~/.profile: profile
     ~/.gitconfig: gitconfig
@@ -26,7 +23,9 @@
     ~/.emacs.d: emacs
 
 - shell:
+  - mkdir -p ~/.emails
   - mkdir -p ~/.cache/emacs
   - mkdir -p ~/.local/share/emacs
-  - systemctl daemon-reload --user && systemctl enable --user ssh-agent && systemctl start --user ssh-agent
+  - systemctl daemon-reload --user
+  - systemctl enable --user ssh-agent && systemctl start --user ssh-agent
     #  - systemctl daemon-reload --user && systemctl enable --user gpg-agent && systemctl start --user gpg-agent

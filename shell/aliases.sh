@@ -134,3 +134,15 @@ alias mirrorsite='wget -m -k -K -E -e robots=off'
 
 # Mirror stdout to stderr, useful for seeing data going through a pipe
 alias peek='tee >(cat 1>&2)'
+
+# Ledger
+alias led='ledger -f /home/lpostula/org/ledger/ledger.dat --pedantic'
+alias leda='led --real --depth 3 bal ^Liabilities ^Assets'
+alias ledcp='led reg expr "(not has_tag(/Proof/)) and ((account =~ /Assets:Postula Conceptions:Checking:Main/) or (account =~ /Liabilities:Postula Conceptions:CreditCard:Visa:Main/))"  -S date'
+alias ledcu='led reg expr "(tag(/Uploaded/) =~ /0/)  and ((account =~ /Assets:Postula Conceptions:Checking:Main/) or (account =~ /Liabilities:Postula Conceptions:CreditCard:Visa:Main/))"  -S date --no-pager -F "%(tag(/Proof/))\n"'
+alias ledu='cd /home/lpostula/org/ledger && ledger python /home/lpostula/org/ledger/upload-dropbox.py'
+
+
+alias jqlog="jq -R 'fromjson?' -j '.file, \":\", .line, \" [\", .level, \"] \", .message'"
+
+alias sshnocheck="ssh -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\""

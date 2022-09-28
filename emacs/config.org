@@ -1,3 +1,4 @@
+
 #+AUTHOR: Loïs Postula
 #+TITLE: GNU Emacs Configuration
 
@@ -6,6 +7,7 @@
 - [[#general-settings][General Settings]]
   - [[#start-of-week-is-monday][Start of week is Monday]]
   - [[#truncate-lines][Truncate Lines]]
+  - [[#visual-line-mode][Visual line mode]]
   - [[#append-and-update-time-stamps-for-time-stamp--in-headers][Append and update time-stamps for =Time-stamp: <>= in headers]]
   - [[#inhibit-startup-screen][Inhibit Startup Screen]]
   - [[#make-cursor-the-width-of-the-character-it-is-under-ie-full-width-of-a-tab][Make cursor the width of the character it is under; i.e. full width of a TAB:]]
@@ -22,14 +24,31 @@
   - [[#lp-binary-not-found-list-and-lp-eval-if-binary-or-warn][lp-binary-not-found-list and lp-eval-if-binary-or-warn()]]
   - [[#some-binary-test][Some binary test]]
 - [[#theming][Theming]]
+  - [[#general-appearance][General Appearance]]
   - [[#icons][Icons]]
   - [[#theme][Theme]]
+  - [[#color-display-in-text][Color Display in Text]]
+  - [[#nyan-scroll][Nyan Scroll]]
+- [[#spelling][Spelling]]
+  - [[#abbreviations][Abbreviations]]
+  - [[#fly-spell][Fly Spell]]
+  - [[#grammar-check][Grammar Check]]
+- [[#minibuffer-completion][Minibuffer Completion]]
+  - [[#install-vertico][Install vertico]]
+  - [[#rich-annotation-in-vertico][Rich annotation in vertico]]
+  - [[#icons-in-annotations][Icons in annotations]]
+  - [[#better-ordering][Better Ordering]]
+  - [[#consult][Consult]]
 - [[#programming][Programming]]
   - [[#lsp][LSP]]
   - [[#lsp-ui][LSP-UI]]
+  - [[#lsp-consult][LSP-Consult]]
   - [[#auto-completions][Auto-Completions]]
   - [[#indentations][Indentations]]
   - [[#languages-specific-settings][Languages Specific Settings]]
+  - [[#kubernetes][Kubernetes]]
+  - [[#documentation][Documentation]]
+  - [[#projects][Projects]]
 - [[#helper-functions][Helper functions]]
   - [[#lp-buffer-existsbufname][lp-buffer-exists(bufname)]]
 - [[#ledger][Ledger]]
@@ -40,8 +59,19 @@
   - [[#general-configuration][General Configuration]]
   - [[#contacts][Contacts]]
   - [[#agenda][Agenda]]
+  - [[#refilling][Refilling]]
+  - [[#blogging][Blogging]]
   - [[#end-configuration][End Configuration]]
 - [[#capture][Capture]]
+- [[#email][Email]]
+- [[#hydra][Hydra]]
+  - [[#hydra--flycheck][Hydra / Flycheck]]
+  - [[#hydra--goto-files][Hydra / Goto Files]]
+  - [[#hydra--windows][Hydra / Windows]]
+  - [[#hydra--org][Hydra / Org]]
+  - [[#hydra--projectile][Hydra / Projectile]]
+  - [[#hydra--ledger][Hydra / Ledger]]
+- [[#dashboard][Dashboard]]
 - [[#autostart][Autostart]]
 - [[#closing-and-end-for-profiling][Closing and end for profiling]]
 
@@ -57,6 +87,10 @@
 ** Truncate Lines
 #+begin_src emacs-lisp
 (setq-default truncate-lines t)
+#+end_src
+** Visual line mode
+#+begin_src emacs-lisp
+(setq-default global-visual-line-mode t)
 #+end_src
 ** Append and update time-stamps for =Time-stamp: <>= in headers
 #+BEGIN_SRC emacs-lisp
@@ -126,6 +160,11 @@
 ;; Integrates `straight' directly into the `use-package' package through the
 ;; `:straight' expression.
 (straight-use-package 'use-package)
+#+END_SRC
+*** Default Packages
+#+BEGIN_SRC emacs-lisp
+(use-package request)
+(use-package websocket)
 #+END_SRC
 * No Littering
 
@@ -248,6 +287,22 @@ If not found, a warning message is printed which can be defined as an optional p
 #+end_src
 
 * Theming
+
+** General Appearance
+*** No tool bar, no scroll bar, no menu bar
+#+begin_src emacs-lisp
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (menu-bar-mode -1)
+#+end_src
+*** Window division
+#+begin_src emacs-lisp
+  (setq window-divider-default-places 'right-only
+	window-divider-default-right-width 1)
+  (set-face-attribute 'window-divider nil
+		      :foreground (face-foreground 'default))
+  (window-divider-mode +1)
+#+end_src
 ** Icons
 #+begin_src emacs-lisp
 (use-package all-the-icons
@@ -274,27 +329,199 @@ If not found, a warning message is printed which can be defined as an optional p
    :custom (solaire-mode-remap-fringe t)
    :config (solaire-global-mode))
  #+end_src
-
-* Programming
-** LSP 
+** Color Display in Text
 #+begin_src emacs-lisp
-(use-package lsp-mode
-  :ensure t
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  :commands lsp
-)
+  (use-package rainbow-mode
+    :delight
+    :hook ((prog-mode text-mode) . rainbow-mode))
+#+end_src
+** Nyan Scroll
+#+begin_src emacs-lisp
+  (use-package nyan-mode
+    :ensure t ;; install package if not found OR: (setq use-package-always-ensure t)
+    :init
+    (setq nyan-bar-length 20);; reduce length on narrow upward/tilted display
+    :config
+    (nyan-mode t)
+    )
+#+end_src
+* Spelling
+** DONE Abbreviations
+- State "DONE"       from "SOMEDAY"    [2022-01-13 do 14:50]
+#+begin_src emacs-lisp
+  (use-package abbrev
+    :ensure nil
+    :delight
+    :hook (text-mode . abbrev-mode)
+    :custom (abbrev-file-name (expand-file-name (concat lp-user-emacs-directory "abbrev_defs")))
+    :config
+    (if (file-exists-p abbrev-file-name)
+	(quietly-read-abbrev-file)))
+#+end_src
+** Fly Spell
+#+begin_src emacs-lisp
+  (use-package flyspell
+    :ensure nil
+    :delight
+    :hook ((text-mode . flyspell-mode)
+	   (prog-mode . flyspell-prog-mode))
+    :custom
+    ;; Add correction to abbreviation table.
+    (flyspell-abbrev-p t)
+    (flyspell-default-dictionary "en_US")
+    (flyspell-issue-message-flag nil)
+    (flyspell-issue-welcome-flag nil)
+
+    (use-package grammarly
+      :load-path (lambda () (expand-file-name (concat lp-user-emacs-directory "contrib/grammarly")))
+      :ensure t
+      :config
+      (
+       (grammarly-username "lois@postu.la")
+       (grammarly-password "PiL0KCKEdSlpwafAnkJO") 
+
+       ))
+    (use-package flycheck-grammarly
+      :load-path (lambda () (expand-file-name (concat lp-user-emacs-directory "contrib/flycheck-grammarly/")))
+      :ensure t
+      ))
+#+end_src
+Keybindings
+#+begin_src emacs-lisp
+  ;; easy spell check
+  (global-set-key (kbd "<f8>") 'ispell-word)
+  (global-set-key (kbd "C-S-<f8>") 'flyspell-mode)
+  (global-set-key (kbd "C-M-<f8>") 'flyspell-buffer)
+  (global-set-key (kbd "C-<f8>") 'flyspell-check-previous-highlighted-word)
+  (defun flyspell-check-next-highlighted-word ()
+    "Custom function to spell check next highlighted word"
+    (interactive)
+    (flyspell-goto-next-error)
+    (ispell-word)
+    )
+  (global-set-key (kbd "M-<f8>") 'flyspell-check-next-highlighted-word)
+#+end_src
+** Grammar Check
+Grammar checking using ltex
+#+begin_src emacs-lisp
+  (use-package lsp-ltex
+    :ensure t
+    :hook (text-mode . (lambda ()
+			 (require 'lsp-ltex)
+		;	 (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
+     (setq lsp-ltex-log-level "info")
+
+			 (lsp))))  ; or lsp-deferred
+#+end_src
+* Minibuffer Completion
+Mini buffer is where we type emacs commands
+** Install vertico
+#+begin_src emacs-lisp
+  (use-package vertico
+    :straight (:files (:defaults "extensions/*"))
+    :init (vertico-mode)
+    :bind (:map vertico-map
+		("C-<backspace>" . vertico-directory-up))
+    :custom (vertico-cycle t)
+    :custom-face (vertico-current ((t (:background "#1d1f21")))))
+#+end_src
+** Rich annotation in vertico
+#+begin_src emacs-lisp
+  (use-package marginalia
+    :after vertico
+    :init (marginalia-mode)
+    :custom
+    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil)))
+#+end_src
+** Icons in annotations
+#+begin_src emacs-lisp
+  (use-package all-the-icons-completion
+    :after (marginalia all-the-icons)
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup))
+#+end_src
+** Better Ordering
+#+begin_src emacs-lisp
+  (use-package orderless
+    :custom
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles . (partial-completion)))))
+    (completion-styles '(orderless)))
+#+end_src
+** Consult
+#+begin_src emacs-lisp
+  (use-package consult
+    :after projectile
+    :bind  (;; Related to the control commands.
+	    ("<help> a" . consult-apropos)
+	    ("C-x b" . consult-buffer)
+	    ("C-x M-:" . consult-complex-command)
+	    ("C-c k" . consult-kmacro)
+	    ;; Related to the navigation.
+	    ("M-g a" . consult-org-agenda)
+	    ("M-g e" . consult-error)
+	    ("M-g g" . consult-goto-line)
+	    ("M-g h" . consult-org-heading)
+	    ("M-g i" . consult-imenu)
+	    ("M-g k" . consult-global-mark)
+	    ("M-g l" . consult-line)
+	    ("M-g m" . consult-mark)
+	    ("M-g o" . consult-outline)
+	    ("M-g I" . consult-project-imenu)
+	    ;; Related to the search and selection.
+	    ("M-s G" . consult-git-grep)
+	    ("M-s g" . consult-grep)
+	    ("M-s k" . consult-keep-lines)
+	    ("M-s l" . consult-locate)
+	    ("M-s m" . consult-multi-occur)
+	    ("M-s r" . consult-ripgrep)
+	    ("M-s u" . consult-focus-lines)
+	    ("M-s f" . consult-find))
+    :custom
+    (completion-in-region-function #'consult-completion-in-region)
+    (consult-narrow-key "<")
+    (consult-project-root-function #'projectile-project-root)
+    ;; Provides consistent display for both `consult-register' and the register
+    ;; preview when editing registers.
+    (register-preview-delay 0)
+    (register-preview-function #'consult-register-preview))
+#+end_src
+* Programming
+** LSP
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :commands lsp lsp-deferred
+    :custom
+    (lsp-enable-snippet nil)
+					  ; rust
+    (lsp-rust-analyzer-cargo-watch-command "clippy")
+    (lsp-eldoc-render-all t)
+    (lsp-idle-delay 0.6)
+    (lsp-rust-analyzer-server-display-inlay-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+    (lsp-rust-analyzer-display-chaining-hints t)
+    (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names t)
+    (lsp-rust-analyzer-display-closure-return-type-hints t)
+    (lsp-rust-analyzer-display-parameter-hints t)
+    (lsp-rust-analyzer-display-reborrow-hints t)
+    :config
+    (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+    )
 #+end_src
 ** LSP-UI
 #+begin_src emacs-lisp
   (use-package lsp-ui
     :ensure t
+    :after lsp
     :commands lsp-ui-mode
     :hook (lsp-mode . lsp-ui-mode)
 	:config
 	(setq lsp-ui-sideline-enable t)
-	(setq lsp-ui-sideline-show-hover nil)
+	(setq lsp-ui-sideline-show-hover t)
 	(setq lsp-ui-doc-position 'bottom)
+	(lsp-ui-peek-always-show t)
 	;; lsp config stuff
 	(setq lsp-enable-links t)
 	(setq lsp-signature-render-documentation t)
@@ -305,17 +532,55 @@ If not found, a warning message is printed which can be defined as an optional p
 	(lsp-ui-doc-show)		
     )
 #+end_src
+** LSP-Consult
+#+begin_src emacs-lisp
+  (use-package consult-lsp
+    :commands (consult-lsp-diagnostics consult-lsp-symbols))
+#+end_src
 ** Auto-Completions
 #+begin_src emacs-lisp
-(use-package company
-  :ensure t
-  :config
-  (setq company-idle-delay 0)
-  (setq company-minimum-prefix-length 1)
-
-  (add-hook 'after-init-hook 'global-company-mode)
-)
+  (use-package company
+    :ensure t
+    :config
+    (setq company-idle-delay 0.5)
+    (setq company-minimum-prefix-length 1)
   
+    (add-hook 'after-init-hook 'global-company-mode)
+    )
+
+  (use-package yasnippet
+    :ensure t
+    :config
+    (yas-reload-all)
+    (add-hook 'prog-mode-hook 'yas-minor-mode)
+    (add-hook 'text-mode-hook 'yas-minor-mode))
+
+  (defun company-yasnippet-or-completion ()
+    (interactive)
+    (or (do-yas-expand)
+	(company-complete-common)))
+
+  (defun check-expansion ()
+    (save-excursion
+      (if (looking-at "\\_>") t
+	(backward-char 1)
+	(if (looking-at "\\.") t
+	  (backward-char 1)
+	  (if (looking-at "::") t nil)))))
+
+  (defun do-yas-expand ()
+    (let ((yas/fallback-behavior 'return-nil))
+      (yas/expand)))
+
+  (defun tab-indent-or-complete ()
+    (interactive)
+    (if (minibufferp)
+	(minibuffer-complete)
+      (if (or (not yas/minor-mode)
+	      (null (do-yas-expand)))
+	  (if (check-expansion)
+	      (company-complete-common)
+	    (indent-for-tab-command)))))
 #+end_src
 ** Indentations
 Let's use the =aggressive indentations= package
@@ -347,6 +612,96 @@ Enable electric pairs
 #+begin_src emacs-lisp
   (electric-pair-mode 1)
 #+end_src
+*** YML
+#+begin_src emacs-lisp
+  (use-package yaml-mode
+  :delight "ψ"
+  :hook (yaml-mode . lsp-deferred)
+  :mode ("\\.\\(yaml\\|yml\\)\\'"))
+#+end_src
+*** Dockerfile
+#+begin_src emacs-lisp
+  (use-package dockerfile-mode :delight "δ" :mode "Dockerfile\\'")
+#+end_src
+*** Terraform
+#+begin_src emacs-lisp
+  (
+   use-package terraform-mode :mode ("\\.\\(tf\\|tfvars\\)\\'")
+   :custom
+   (terraform-indent-level 4))
+#+end_src
+*** Rust
+**** COMMENT Rustic
+`Rustic` is an extension of `rust-mode`
+#+begin_src emacs-lisp
+
+  (use-package rustic
+    :ensure t
+    (setq rustic-format-on-save t)
+    (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+  (defun rk/rustic-mode-hook ()
+    (when buffer-file-name
+      (setq-local buffer-save-without-query t)))
+#+end_src
+
+** Kubernetes
+Let's use kubernetes-el to manage kubernetes cluster with Emacs
+#+begin_src emacs-lisp
+  (use-package kubernetes
+    :ensure t
+    :commands (kubernetes-overview))
+
+  ;; If you want to pull in the Evil compatibility package.
+  (use-package kubernetes-evil
+    :ensure t
+    :after kubernetes)
+
+  (fset 'k8s 'kubernetes-overview)
+#+end_src
+** Documentation
+#+begin_src emacs-lisp
+  (use-package helpful
+    :commands (helpful-at-point
+	       helpful-callable
+	       helpful-command
+	       helpful-function
+	       helpful-key
+	       helpful-macro
+	       helpful-variable)
+    :bind
+    ([remap display-local-help] . helpful-at-point)
+    ([remap describe-function] . helpful-callable)
+    ([remap describe-variable] . helpful-variable)
+    ([remap describe-symbol] . helpful-symbol)
+    ([remap describe-key] . helpful-key)
+    ([remap describe-command] . helpful-command))
+#+end_src
+** Projects
+#+begin_src emacs-lisp
+  (use-package projectile
+    :diminish (projectile-mode)
+    :custom
+    (projectile-enable-caching t)
+    (projectile-keymap-prefix (kbd "C-c C-p"))
+    (projectile-mode-line '(:eval (projectile-project-name)))
+    (projectile-project-search-path '("~/Projects"))
+    :config (projectile-global-mode))
+
+  (use-package consult-projectile
+    :after (consult projectile)
+    :straight (consult-projectile :type git :host gitlab :repo
+				  "OlMon/consult-projectile" :branch "master")
+    :commands (consult-projectile))
+
+  (use-package ibuffer-projectile
+    :after ibuffer
+    :preface
+    (defun my/ibuffer-projectile ()
+      (ibuffer-projectile-set-filter-groups)
+      (unless (eq ibuffer-sorting-mode 'alphabetic)
+	(ibuffer-do-sort-by-alphabetic))))
+#+end_src
 * Helper functions
 ** lp-buffer-exists(bufname)
 Checks wether or not a buffer exists
@@ -360,20 +715,24 @@ Ledger is a tool used to track money, using a double entry accounting system. Le
 ** Emacs Setup
 #+begin_src emacs-lisp
   (use-package ledger-mode
-    :mode ("\\.\\(dat\\|\\.ledger\\)\\'")
+    :mode ("\\.\\(dat\\)\\'")
     :preface
     (defun lp/ledger-save ()
-	    "Clear the ledger buffer at each save."
-	    (interactive)
-	    (ledger-mode-clean-buffer)
-	    (save-buffer))
+      "Clear the ledger buffer at each save."
+      (interactive)
+      (ledger-mode-clean-buffer)
+      (save-buffer))
     :bind (:map ledger-mode-map
 		("C-x C-s" . lp/ledger-save))
+    :hook (leder-mode . ledger-flymake-enable)
     :custom
     ;;(ledger-clear-whole-transactions t)
-    (ledger-reconcile-default-commodity "EUR")
+    (ledger-reconcile-default-commodity "€")
     (ledger-post-amount-alignment-column 65)
-    )
+    (ledger-reports
+     '(("account statement" "%(binary) reg --real --pedantic -f ~/org/ledger/ledger.dat ^%(account)")
+       ("balance sheet" "%(binary) --real --pedantic -f ~/org/ledger/ledger.dat bal ^Assets ^Liabilities ^equity --depth 3"))
+     (ledger-report-use-header-line nil)))  
 #+end_src
 * Org mode
 ** Load Orgmode
@@ -428,6 +787,27 @@ Automatically uip[date the table of contentes of a =.org= files. Only need to ad
     :hook (org-mode . toc-org-enable)
     )
 #+end_src
+*** Todo Keywords and Faces
+**** Keywords
+#+begin_src emacs-lisp
+  (setq org-todo-keywords '((sequence "TODO(t)" "STARTED(s)" "WAITING(w@/!)" "SOMEDAY(S!)" "|" "DONE(d!/!)" "CANCELLED(c@/!)")))
+#+end_src
+**** Faces
+#+begin_src emacs-lisp
+  (setq org-todo-keyword-faces
+      (quote (("TODO"      :foreground "lightblue"    :weight bold)
+	      ("STARTED"   :foreground "red"          :weight bold)
+	      ("WAITING"   :foreground "orange"       :weight bold)
+	      ("DONE"      :foreground "forest green" :weight bold)
+	      ("SOMEDAY"   :foreground "magenta"      :weight bold)
+	      ("CANCELLED" :foreground "forest green" :weight bold))))
+#+end_src
+*** KeyBinding
+**** Linking
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  (global-set-key (kbd "C-c C-l") 'org-insert-link)
+#+end_src
 ** Contacts
 #+begin_src emacs-lisp
   (use-package org-contacts
@@ -450,6 +830,8 @@ Automatically uip[date the table of contentes of a =.org= files. Only need to ad
 ***** Non work Files
 #+begin_src emacs-lisp
   (setq lp-non-work-agenda-files ( append ` (
+					     ,(concat lp-org-files-path "inbox.org")
+					     ,(concat lp-org-files-path "tickler.org")
 					     ,(concat lp-org-files-path "misc.org")
 					     ,(concat lp-org-files-path "projects.org")
 					     ,(concat lp-org-files-path "notes.org")
@@ -478,20 +860,87 @@ Automatically uip[date the table of contentes of a =.org= files. Only need to ad
 **** Helper functions
 ***** super-agenda
 #+begin_src emacs-lisp
-  (use-package org-agenda
-    :ensure nil
-    :after org
-    :custom
-    (org-agenda-prefix-format '((agenda . " %i %-20:c%?-12t%-6e% s")
-				(todo   . " %i %-20:c %-6e")
-				(tags   . " %i %-20:c")
-				(search . " %i %-20:c"))))
+  (use-package org-super-agenda
+    :ensure t
+    :config
+    (org-super-agenda-mode)
+    (setq super-agenda-groups
+	  '(
+	    (:name "Today" :time-grid t)
+	    )
+	  ))
 
-  (setq org-agenda-custom-commands
-      '(("d" "Today's Tasks"
-	 ((agenda "" ((org-agenda-span 1)
-		      (org-agenda-overriding-header "Today's Tasks")))))))
   (global-set-key (kbd "C-c a") #'org-agenda)
+
+  (defun lp-super-agenda()
+    "generates my super-agenda"
+    (interactive)
+    (org-super-agenda-mode)
+    (let
+	((org-super-agenda-groups super-agenda-groups))
+      (org-agenda nil "a")
+      )
+    )
+
+  (defun lp-org-agenda (&optional arg)
+    "Opens the already opened agenda or opens new one instead. With
+     universal prefix, use business agenda."
+    (interactive "P")
+    (setq lp-org-agenda-start-time (current-time))
+
+    (setq lp-org-agenda-tags-column (- (- (window-total-width) 3)))
+    (setq org-agenda-tags-column lp-org-agenda-tags-column) ;; total width minus 3
+
+    (if (lp-buffer-exists "*Org Agenda*")
+	(switch-to-buffer "*Org Agenda*")
+      (progn
+	(lp-super-agenda)
+
+	(setq current-timestamp
+	      (concat
+	       (format-time-string "%Y-%m-%dT%T")
+	       ((lambda (x) (concat (substring x 0 3) ":" (substring x 3 5)))
+		(format-time-string "%z"))))
+	(when (> (string-to-number (emacs-uptime "%m")) 2) ;; only flash when not part of the boot process (= Emacs runs longer than 2 minutes)
+	  (my-flash (format-message "Agenda built.\n(took %.2fs)" (float-time (time-subtract (current-time) lp-org-agenda-start-time))))
+	  )
+	(lp-log (format-message "my-org-agenda took %.2fs" (float-time (time-subtract (current-time) lp-org-agenda-start-time))))
+
+	)
+      )
+    )
+
+#+end_src
+** Refilling
+*** Target should includes any file contributing to the agenda
+#+begin_src emacs-lisp
+  (setq org-refile-targets (quote (
+				   (lp-work-agenda-files :maxlevel . 4)
+				   (lp-non-work-agenda-files :maxlevel . 4)
+				   )))
+#+end_src
+*** Target should start with file name
+#+begin_src emacs-lisp
+  (setq org-refile-use-outline-path (quote file))
+#+end_src
+*** Activate Caching of targets
+#+begin_src emacs-lisp
+  (setq org-refile-use-cache t)
+#+end_src
+*** Targets complete directly with IDO
+#+begin_src emacs-lisp
+  (setq org-outline-path-complete-in-steps nil)
+#+end_src
+*** Allow refile to create parent tasks with confirmation
+#+begin_src emacs-lisp
+  (setq org-refile-allow-creating-parent-nodes (quote confirm))
+#+end_src
+** Blogging
+Let's give a try to org-mode for blogging
+#+begin_src emacs-lisp
+  (use-package ox-hugo
+    :ensure t
+    :after ox)
 #+end_src
 ** End Configuration
 #+begin_src emacs-lisp
@@ -505,19 +954,188 @@ Capture is used for template management
     :after org
     :preface
     (defvar lp/org-ledger-visa-template "%(org-read-date) %^{Payee}
-    Expenses:%^{Account}  %^{Amount} EUR
-    Liabilities:Visa:Postula Conceptions:Main  %^{Amount} EUR" "Template for credit card transaction with ledger.")
-
+      Expenses:%^{Account}  %^{Amount} EUR
+      Liabilities:Visa:Postula Conceptions:Main  %^{Amount} EUR" "Template for credit card transaction with ledger.")
     :custom
     (org-capture-templates
      `(("l" "Ledger")
        ("lv" "Visa" plain (file ,(format "~/org/ledger/ledger-%s.dat" (format-time-string "%Y"))),
 	lp/org-ledger-visa-template
 	:empty-lines 1
-	:immediate-finish t))))
+	:immediate-finish t)
+       ("t" "Todo [inbox]" entry
+	(file+headline "~/org/inbox.org" "Tasks")
+	"* TODO %i%?")
+       ("T" "Tickler" entry
+	(file+headline "~/org/tickler.org" "Tickler")
+	"* %i%? \n %U")
+       )))
 
-(global-set-key (kbd "C-c c") #'org-capture)
+  (global-set-key (kbd "C-c c") #'org-capture)
 #+end_src
+* Email
+#+begin_src emacs-lisp
+  (use-package mu4e
+    :ensure nil
+    :hook (mu4e-compose-mode . turn-off-auto-fill)
+    :bind (:map mu4e-headers-mode-map
+		("M-[" . scroll-down-command)
+		("M-]" . scroll-up-command))
+    )
+#+end_src
+* Hydra
+Hydra allows you to create menu for mode
+#+begin_src emacs-lisp
+  (use-package hydra
+    :bind(
+	  ("C-c f" . hydra-flycheck/body)
+	  ("C-c l" . hydra-ledger/body)
+	  ("C-c g" . hydra-go-to-file/body)
+	  ("C-c o" . hydra-org/body)
+	  ("C-c p" . hydra-projectile/body)
+	  ("C-c w" . hydra-windows/body)
+	  )
+    )
+
+
+  (use-package major-mode-hydra
+    :after hydra
+    :preface
+    (defun with-alltheicon (icon str &optional height v-adjust face)
+      "Display an icon from all-the-icon."
+      (s-concat (all-the-icons-alltheicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+    (defun with-faicon (icon str &optional height v-adjust face)
+      "Display an icon from Font Awesome icon."
+      (s-concat (all-the-icons-faicon icon ':v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+    (defun with-fileicon (icon str &optional height v-adjust face)
+      "Display an icon from the Atom File Icons package."
+      (s-concat (all-the-icons-fileicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str))
+
+    (defun with-octicon (icon str &optional height v-adjust face)
+      "Display an icon from the GitHub Octicons."
+      (s-concat (all-the-icons-octicon icon :v-adjust (or v-adjust 0) :height (or height 1) :face face) " " str)))
+#+end_src
+** Hydra / Flycheck
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-flycheck
+		       (:hint nil :color teal :quit-key "q" :title (with-faicon "plane" "Flycheck" 1 -0.05))
+		       ("Checker"
+			(("?" flycheck-describe-checker "describe")
+			 ("d" flycheck-disable-checker "disable")
+			 ("m" flycheck-mode "mode")
+			 ("s" flycheck-select-checker "select"))
+			"Errors"
+			(("<" flycheck-previous-error "previous" :color pink)
+			 (">" flycheck-next-error "next" :color pink)
+			 ("f" flycheck-buffer "check")
+			 ("l" flycheck-list-errors "list"))
+			"Other"
+			(("M" flycheck-manual "manual")
+			 ("v" flycheck-verify-setup "verify setup"))))
+#+end_src
+** Hydra / Goto Files
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-go-to-file
+    (:hint nil :color teal :quit-key "q" :title (with-octicon "file-symlink-file" "Go To" 1 -0.05))
+    ("Agenda"
+     (("ac" (find-file "~/.org/agenda/contacts.org") "contacts")
+      ("ai" (find-file "~/org/agenda/inbox.org") "inbox")
+      ("af" (find-file "~/org/fmsc.org") "fmsc"))
+     "Blog"
+     (("bm" (find-file "~/org/blog/blog.org") "main"))
+     "Config"
+     (("ce" (find-file "~/.emacs.d/config.org") "emacs"))
+     "Ledger"
+     (("lm" (find-file "~/org/ledger/ledger.dat") "main")
+     ("lc" (find-file "~/org/ledger/ledger-2022.dat") "current"))
+     "Other"
+     (("ob" (find-file "~/org/other/books.org") "book"))))
+#+end_src
+** Hydra / Windows
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-windows
+    (:hint nil :forein-keys warn :quit-key "q" :title (with-faicon "windows" "Windows" 1 -0.05))
+    ("Window"
+     (("b" balance-windows "balance")
+      ("i" enlarge-window "heighten")
+      ("j" shrink-window-horizontally "narrow")
+      ("k" shrink-window "lower")
+      ("u" winner-undo "undo")
+      ("r" winner-redo "redo")
+      ("l" enlarge-window-horizontally "widen")
+      ("s" switch-window-then-swap-buffer "swap" :color teal))
+     "Zoom"
+     (("-" text-scale-decrease "out")
+      ("+" text-scale-increase "in")
+      ("=" (text-scale-increase 0) "reset"))))
+#+end_src
+** Hydra / Org
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-org
+    (:hint nil :color teal :quit-key "q" :title (with-fileicon "org" "Org" 1 -0.05))
+    ("Action"
+     (("A" my/org-archive-done-tasks "archive")
+      ("a" org-agenda "agenda")
+      ("c" org-capture "capture")
+      ("d" org-decrypt-entry "decrypt")
+      ("i" org-insert-link-global "insert-link")
+      ("j" my/org-jump "jump-task")
+      ("k" org-cut-subtree "cut-subtree")
+      ("o" org-open-at-point-global "open-link")
+      ("r" org-refile "refile")
+      ("s" org-store-link "store-link")
+      ("t" org-show-todo-tree "todo-tree"))))
+#+end_src
+** Hydra / Projectile
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-projectile
+    (:hint nil :color teal :quit-key "q" :title (with-faicon "rocket" "Projectile" 1 -0.05))
+    ("Buffers"
+     (("b" projectile-switch-to-buffer "list")
+      ("k" projectile-kill-buffers "kill all")
+      ("S" projectile-save-project-buffers "save all"))
+     "Find"
+     (("d" projectile-find-dir "directory")
+      ("D" projectile-dired "root")
+      ("f" projectile-find-file "file")
+      ("p" consult-projectile "project"))
+     "Other"
+     (("i" projectile-invalidate-cache "reset cache"))
+     "Search"
+     (("r" projectile-replace "replace")
+      ("R" projectile-replace-regexp "regexp replace")
+      ("s" counsel-ripgrep "search"))))
+#+end_src
+** Hydra / Ledger
+#+begin_src emacs-lisp
+  (pretty-hydra-define hydra-ledger
+  (:hint nil :color teal :quit-key "q" :title (with-faicon "usd" "Ledger" 1 -0.05))
+  ("Action"
+   (("b" ledger-add-transaction "add")
+    ("c" ledger-mode-clean-buffer "clear")
+    ("i" ledger-copy-transaction-at-point "copy")
+    ("s" ledger-delete-current-transaction "delete")
+    ("r" ledger-report "report"))))
+#+end_src
+
+* Dashboard
+#+begin_src emacs-lisp
+(use-package dashboard
+  :custom
+  (dashboard-banner-logo-title "With Great Power Comes Great Responsibility!")
+  (dashboard-center-content t)
+  (dashboard-items '((agenda)
+                     (projects . 5)))
+  (dashboard-projects-switch-function 'counsel-projectile-switch-project-by-name)
+  (dashboard-set-file-icons t)
+  (dashboard-set-footer nil)
+  (dashboard-set-heading-icons t)
+  (dashboard-set-navigator t)
+  (dashboard-startup-banner 'logo)
+  :config (dashboard-setup-startup-hook))
+  #+end_src
 * Autostart
 At the end of the configuration, let's execute some things
 #+begin_src emacs-lisp
@@ -526,6 +1144,8 @@ At the end of the configuration, let's execute some things
   (lp-log "Interactive Emacs is started")
 
   (message "Creating agenda...")
+
+  ;(lp-org-agenda)
 #+end_src
 * Closing and end for profiling
 This is the end of the elisp blocks to be tangled. Finishing up loading the configuration:

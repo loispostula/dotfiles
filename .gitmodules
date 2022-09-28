@@ -5,3 +5,9 @@
 [submodule "emacs/contrib/no-littering"]
 	path = emacs/contrib/no-littering
 	url = https://github.com/emacscollective/no-littering.git
+[submodule "emacs/contrib/flycheck-grammarly"]
+	path = emacs/contrib/flycheck-grammarly
+	url = https://github.com/emacs-grammarly/flycheck-grammarly.git
+[submodule "emacs/contrib/grammarly"]
+	path = emacs/contrib/grammarly
+	url = https://github.com/emacs-grammarly/grammarly.git

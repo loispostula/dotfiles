@@ -1,14 +1,27 @@
 [user]
 	name = Loïs Postula
 	email = lois@postu.la
-	signingkey = BBE17CD415B33DA1
+	signingkey = B43CB91F7516087C
 [init]
 	defaultBranch = main
 [commit]
-	gpgsign = false
+	gpgsign = true
 [gpg]
 	program = /usr/bin/gpg
 [core]
 	editor = vim
+	autocrlf = input
 [pull]
 	rebase = false
+[credential]
+	helper = store
+	helper = 
+	helper = /usr/local/share/gcm-core/git-credential-manager-core
+	credentialStore = gpg
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+[credential "https://dev.azure.com"]
+	useHttpPath = true
