@@ -8,6 +8,8 @@
 * Table of Content :TOC:
 - [[#default-doom-emacs-config][Default Doom emacs config]]
 - [[#org][Org]]
+  - [[#note-taking][Note taking]]
+  - [[#default][Default]]
   - [[#roam][Roam]]
   - [[#contacts][Contacts]]
   - [[#referencing][Referencing]]
@@ -28,13 +30,26 @@
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
 (setq user-full-name "Lois Postula"
-      user-mail-address "lois@postu.la")
+      user-mail-address "lois@postu.la"
+      doom-scratch-initial-major-mode 'lisp-interaction-mode
+      doom-font (font-spec :family "Dank Mono" :size 16)
+      doom-variable-pitch-font (font-spec :family "Roboto" :size 16)
+      doom-serif-font (font-spec :family "Libre Baskerville")
+      doom-theme 'doom-spacegrey
+      display-line-numbers-type 'relative
+      load-prefer-newer t
+      +zen-text-scale 1
+      writeroom-extra-line-spacing 0.3
+      lsp-ui-sideline-enable nil
+      lsp-enable-symbol-highlighting nil
+      search-highlight t
+      search-whitespace-regexp ".*?"
+      org-directory "~/.org/"
+      loispostula/default-bibliography "~/org/roam/biblio.bib"
+      org-adapt-indentation nil
+      org-habit-show-habits-only-for-today t)
 
-(setq doom-theme 'doom-challenger-deep)
-(setq doom-font (font-spec :family "Fira Mono for Powerline" :size 12))
-;; This determines the style of line numbers in effect. If set to `nil', line
-;; numbers are disabled. For relative line numbers, set this to `relative'.
-(setq display-line-numbers-type 'relative)
+
 
 (add-hook 'code-review-mode-hook
           (lambda ()
@@ -44,35 +59,166 @@
 #+end_src
 
 * Org
+
+** Note taking
+*** Fleeting Notes
+Fleeting notes are unstructured notes that are brain dump to the minute
+#+begin_src emacs-lisp
+(after! org
+  (add-to-list 'org-capture-templates
+               '("f" "Fleeting note" entry
+                  (file "~/org/inbox.org")
+                  "* TODO %^{Note title}\nContext: %a\n%?" :empty-lines 1))
+  (add-to-list 'org-capture-templates
+               '("s" "Slipbox" entry
+                  (file "~/org/inbox.org")
+                  "* %?\n")))
+
+(defun loispostula/org-capture-inbox ()
+  (interactive)
+  (org-capture nil "i"))
+
+(defun loispostula/org-capture-slipbox ()
+  (interactive)
+  (org-capture nil "s"))
+
+(defun loispostula/org-agenda ()
+  (interactive)
+  (org-agenda nil " "))
+
+(bind-key "C-c <tab>" #'loispostula/org-capture-inbox)
+(bind-key "C-c SPC" #'loispostula/org-agenda)
+#+end_src
+** Default
+#+begin_src emacs-lisp
+(require 'org)
+(require 'org-habit)
+
+(after! org
+  (setq org-attach-dir-relative t))
+(with-eval-after-load 'flycheck
+  (flycheck-add-mode 'proselint 'org-mode))
+
+(map! :map org-mode-map
+      "M-n" #'outline-next-visible-heading
+      "M-p" #'outline-previous-visible-heading)
+
+(setq org-src-window-setup 'current-window
+      org-return-follows-link t
+      org-babel-load-languages '((emacs-lisp . t)
+                                 (python . t)
+                                 (dot . t)
+                                 (R . t))
+      org-confirm-babel-evaluate nil
+      org-use-speed-commands t
+      org-fold-catch-invisible-edits 'show
+      org-preview-latex-image-directory "/tmp/ltximg/"
+      org-structure-template-alist '(("a" . "export ascii")
+                                     ("c" . "center")
+                                     ("C" . "comment")
+                                     ("e" . "example")
+                                     ("E" . "export")
+                                     ("h" . "export html")
+                                     ("l" . "export latex")
+                                     ("q" . "quote")
+                                     ("s" . "src")
+                                     ("v" . "verse")
+                                     ("el" . "src emacs-lisp")
+                                     ("d" . "definition")
+                                     ("t" . "theorem")))
+
+#+end_src
 ** Roam
 #+begin_src emacs-lisp
-(setq org-directory "~/org/")
-(setq! loispostula/default-bibliography "~/org/roam/biblio.bib")
-(after! org
-        (setq org-roam-directory "~/org/roam/")
-        (setq org-roam-index-file "~/org/roam/index.org"))
+(use-package! org-roam
+  :init
+  (map! :leader
+        :prefix "n"
+        :desc "org-roam" "l" #'org-roam-buffer-toggle
+        :desc "org-roam-node-insert" "i" #'org-roam-node-insert
+        :desc "org-roam-node-find" "f" #'org-roam-node-find
+        :desc "org-roam-ref-find" "r" #'org-roam-ref-find
+        :desc "loispostula/org-capture-slipbox" "<tab>" #'lpostula/org-capture-slipbox
+        :desc "org-roam-capture" "c" #'org-roam-capture)
+  (setq org-roam-directory (file-truename "~/org/roam/")
+        org-roam-database-connector 'sqlite-builtin
+        org-roam-db-gc-threshold most-positive-fixnum
+        org-id-link-to-org-use-id t)
+  :config
+  (org-roam-db-autosync-mode +1)
+  (set-popup-rules!
+    `((,(regexp-quote org-roam-buffer) ; persistent org-roam buffer
+       :side right :width .33 :height .5 :ttl nil :modeline nil :quit nil :slot 1)
+      ("^\\*org-roam: " ; node dedicated org-roam buffer
+       :side right :width .33 :height .5 :ttl nil :modeline nil :quit nil :slot 2)))
+  (add-hook 'org-roam-mode-hook #'turn-on-visual-line-mode)
+  (setq org-roam-capture-templates
+        '(("m" "main" plain
+           "%?"
+           :if-new (file+head "main/${slug}.org"
+                              "#+title: ${title}\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("r" "reference" plain "%?"
+           :if-new
+           (file+head "reference/${slug}.org" "#+title: ${title}\n")
+           :immediate-finish t
+           :unnarrowed t)
+          ("a" "article" plain "%?"
+           :if-new
+           (file+head "articles/${slug}.org" "#+title: ${title}\n#+filetags: :article:\n")
+           :immediate-finish t
+           :unnarrowed t)))
+  (defun jethro/tag-new-node-as-draft ()
+    (org-roam-tag-add '("draft")))
+  (add-hook 'org-roam-capture-new-node-hook #'jethro/tag-new-node-as-draft)
+  (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    (condition-case nil
+        (file-name-nondirectory
+         (directory-file-name
+          (file-name-directory
+           (file-relative-name (org-roam-node-file node) org-roam-directory))))
+      (error "")))
+  (setq org-roam-node-display-template
+        (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (require 'citar)
+  (defun jethro/org-roam-node-from-cite (keys-entries)
+    (interactive (list (citar-select-ref :multiple nil :rebuild-cache t)))
+    (let ((title (citar--format-entry-no-widths (cdr keys-entries)
+                                                "${author editor} :: ${title}")))
+      (org-roam-capture- :templates
+                         '(("r" "reference" plain "%?" :if-new
+                            (file+head "reference/${citekey}.org"
+                                       ":PROPERTIES:
+:ROAM_REFS: [cite:@${citekey}]
+:END:
+#+title: ${title}\n")
+                            :immediate-finish t
+                            :unnarrowed t))
+                         :info (list :citekey (car keys-entries))
+                         :node (org-roam-node-create :title title)
+                         :props '(:finalize find-file)))))
 
 #+end_src
 
 ** Contacts
 #+begin_src emacs-lisp
 (use-package org-contacts
-  :ensure nil
+  :ensure t
   :after org
   :custom (org-contacts-files '("~/org/contacts.org")))
-(defvar loispostula/org-contacts-template
-  (concat "* %(org-contacts-template-name)\n"
-          ":PROPERTIES:\n"
-          ":EMAIL: %(org-contacts-template-email)\n"
-          ":BIRTHDAY: %^{YYYY-MM-DD}\n"
-          ":TIMEZONE: %^{TIMEZONE}\n"
-          ":NOTE: %^{NOTE}\n"
-          ":END:") "Template for a contact.")
 (after! org
   (add-to-list 'org-capture-templates
-               `(("C" "Contact" entry (file+headline "~/org/contacts.org" "Friends"),
-                  loispostula/org-contacts-template
-                  :empty-lines 1))))
+               '("C" "Contact" entry
+                 (file+headline "~/org/contacts.org" "Friends")
+                 "* %(org-contacts-template-name)
+                 :PROPERTIES:
+                 :EMAIL: %(org-contacts-template-email)
+                 :BIRTHDAY: %^{YYYY-MM-DD}
+                 :TIMEZONE: %^{TIMEZONE}
+                 :NOTE: %^{NOTE}
+                 :END:" :empty-lines 1)))
 #+end_src
 ** Referencing
 #+begin_src emacs-lisp
@@ -98,6 +244,7 @@
         citar-citeproc-csl-locales-dir "~/Zotero/locales"
         citar-citeproc-csl-style (file-name-concat org-cite-csl-styles-dir "apa.csl")))
 #+end_src
+
 
 * Dev Languages
 #+end_src
@@ -135,6 +282,8 @@ Better handle setting of environment variables needed for various tools
 * Emacs Presence
 #+begin_src emacs-lisp
 (require 'elcord)
-(setq elcord-use-major-mode-as-main-icon t)
+
+(elcord-mode
+ (setq elcord-use-major-mode-as-main-icon :true))
 (elcord-mode)
 #+end_src
