@@ -1,0 +1,140 @@
+#+title: Config
+#+author: Loïs Postula
+#+property: header-args:emacs-lisp :tangle yes :comments link
+#+property: header-args:elisp :tangle config.el :comments link
+#+property: header-args :tangle no :results silent :eval no-export
+
+
+* Table of Content :TOC:
+- [[#default-doom-emacs-config][Default Doom emacs config]]
+- [[#org][Org]]
+  - [[#roam][Roam]]
+  - [[#contacts][Contacts]]
+  - [[#referencing][Referencing]]
+- [[#dev-languages][Dev Languages]]
+  - [[#rust][Rust]]
+  - [[#prisma][Prisma]]
+- [[#local-settings][Local Settings]]
+  - [[#dotenv][dotenv]]
+- [[#emacs-presence][Emacs Presence]]
+
+* Default Doom emacs config
+#+begin_src emacs-lisp
+;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+;; Place your private configuration here! Remember, you do not need to run 'doom
+;; sync' after modifying this file!
+
+
+;; Some functionality uses this to identify you, e.g. GPG configuration, email
+;; clients, file templates and snippets. It is optional.
+(setq user-full-name "Lois Postula"
+      user-mail-address "lois@postu.la")
+
+(setq doom-theme 'doom-challenger-deep)
+(setq doom-font (font-spec :family "Fira Mono for Powerline" :size 12))
+;; This determines the style of line numbers in effect. If set to `nil', line
+;; numbers are disabled. For relative line numbers, set this to `relative'.
+(setq display-line-numbers-type 'relative)
+
+(add-hook 'code-review-mode-hook
+          (lambda ()
+            ;; include *Code-Review* buffer into current workspace
+            (persp-add-buffer (current-buffer))))
+
+#+end_src
+
+* Org
+** Roam
+#+begin_src emacs-lisp
+(setq org-directory "~/org/")
+(setq! loispostula/default-bibliography "~/org/roam/biblio.bib")
+(after! org
+        (setq org-roam-directory "~/org/roam/")
+        (setq org-roam-index-file "~/org/roam/index.org"))
+
+#+end_src
+
+** Contacts
+#+begin_src emacs-lisp
+(use-package org-contacts
+  :ensure nil
+  :after org
+  :custom (org-contacts-files '("~/org/contacts.org")))
+(defvar loispostula/org-contacts-template
+  (concat "* %(org-contacts-template-name)\n"
+          ":PROPERTIES:\n"
+          ":EMAIL: %(org-contacts-template-email)\n"
+          ":BIRTHDAY: %^{YYYY-MM-DD}\n"
+          ":TIMEZONE: %^{TIMEZONE}\n"
+          ":NOTE: %^{NOTE}\n"
+          ":END:") "Template for a contact.")
+(after! org
+  (add-to-list 'org-capture-templates
+               `(("C" "Contact" entry (file+headline "~/org/contacts.org" "Friends"),
+                  loispostula/org-contacts-template
+                  :empty-lines 1))))
+#+end_src
+** Referencing
+#+begin_src emacs-lisp
+(after! bibtex-completion
+  (setq! bibtex-completion-notes-path org-roam-directory
+         bibtex-completion-bibliography loispostula/default-bibliography
+         org-cite-global-bibliography loispostula/default-bibliography
+         bibtex-completion-pdf-field "file"))
+
+(after! bibtex-completion
+  (after! org-roam
+    (setq! bibtex-completion-notes-path org-roam-directory)))
+
+(after! citar
+  (map! :map org-mode-map
+        :desc "Insert citation" "C-c b" #'citar-insert-citation)
+  (setq citar-bibliography loispostula/default-bibliography
+        citar-at-point-function 'embark-act
+        citar-symbol-separator "  "
+        citar-format-reference-function 'citar-citeproc-format-reference
+        org-cite-csl-styles-dir "~/Zotero/styles"
+        citar-citeproc-csl-styles-dir org-cite-csl-styles-dir
+        citar-citeproc-csl-locales-dir "~/Zotero/locales"
+        citar-citeproc-csl-style (file-name-concat org-cite-csl-styles-dir "apa.csl")))
+#+end_src
+
+* Dev Languages
+#+end_src
+** Rust
+#+begin_src emacs-lisp
+(after! lsp-mode
+  (setq lsp-language-id-configuration
+        (cons '(".*\.prisma" . "rust-mode")
+              lsp-language-id-configuration)))
+#+end_src
+
+** Prisma
+#+begin_src emacs-lisp
+#+end_src
+* Local Settings
+** dotenv
+Better handle setting of environment variables needed for various tools
+
+#+begin_src emacs-lisp
+(use-package! dotenv
+  :init
+  (when (file-exists-p (expand-file-name ".env" doom-user-dir))
+    (add-hook! 'doom-init-ui-hook
+      (defun +dotenv-startup-hook ()
+        "Load .env after starting emacs"
+        (dotenv-update-project-env doom-user-dir))))
+  :config
+  (add-hook! 'projectile-after-switch-project-hook
+    (defun +dotenv-projectile-hook ()
+      "Load .env after changing projects."
+      (dotenv-update-project-env (projectile-project-root)))))
+#+end_src
+
+
+* Emacs Presence
+#+begin_src emacs-lisp
+(require 'elcord)
+(setq elcord-use-major-mode-as-main-icon t)
+(elcord-mode)
+#+end_src

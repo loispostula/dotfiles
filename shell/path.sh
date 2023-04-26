@@ -1,1 +1,1 @@
-export PATH=$PATH:/usr/local/go/bin:/home/lpostula/.bin:/home/lpostula/go/bin
+export PATH=$PATH:/usr/local/go/bin:~/.bin:~/go/bin

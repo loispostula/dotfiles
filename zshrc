@@ -13,7 +13,6 @@ fi
 
 # XDG 
 #source ~/.shell/xdg.sh
-
 # Settings
 source ~/.zsh/settings.zsh
 
@@ -28,6 +27,10 @@ source ~/.shell/aliases.sh
 
 # Path
 source ~/.shell/path.sh
+
+# Golang
+source ~/.shell/golang.sh
+
 
 # Custom prompt
 source ~/.zsh/prompt.zsh

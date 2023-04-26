@@ -5,28 +5,16 @@
 
 - clean: ['~',]
 
+- create:
+    - ~/.ssh/config.d
 
 - link:
-    ~/.config/systemd/user/ssh-agent.service:
-      path: config/systemd/user/ssh-agent.service
-      create: true
-    ~/.config/systemd/user/gpg-agent.service:
-      path: config/systemd/user/gpg-agent.service
-      create: true
     ~/.profile: profile
+    ~/.gitignore: gitignore
     ~/.gitconfig: gitconfig
     ~/.shell:
-    ~/.ssh/config:
-        path: ssh/config
-        create: true
-    ~/.vimrc: vimrc
+    ~/.ssh/config: ssh/config
     ~/.zshrc:
     ~/.zsh:
     ~/.xinitrc: xinitrc
-    ~/.emacs.d: emacs
-
-- shell:
-  - mkdir -p ~/.cache/emacs
-  - mkdir -p ~/.local/share/emacs
-  - systemctl daemon-reload --user && systemctl enable --user ssh-agent && systemctl start --user ssh-agent
-    #  - systemctl daemon-reload --user && systemctl enable --user gpg-agent && systemctl start --user gpg-agent
+    ~/.doom.d: doom

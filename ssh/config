@@ -2,3 +2,8 @@ Host ssh.dev.azure.com
   IdentitiesOnly yes
   AddKeysToAgent yes
   User git
+
+Host *
+     ForwardAgent yes
+
+Include ~/.ssh/config.d/*

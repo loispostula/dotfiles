@@ -1,14 +1,16 @@
 [user]
 	name = Loïs Postula
 	email = lois@postu.la
-	signingkey = BBE17CD415B33DA1
+	signingkey = CD675BDA6F94A7873E29A7F593B052C23F92406B #gitleaks:allow
 [init]
 	defaultBranch = main
 [commit]
-	gpgsign = false
+	gpgsign = true
 [gpg]
-	program = /usr/bin/gpg
+	program = gpg
 [core]
 	editor = vim
 [pull]
 	rebase = false
+[core]
+        excludesfile = ~/.gitignore
