@@ -1,27 +1,17 @@
 [user]
 	name = Loïs Postula
 	email = lois@postu.la
-	signingkey = B43CB91F7516087C
+	signingkey = CD675BDA6F94A7873E29A7F593B052C23F92406B #gitleaks:allow
 [init]
 	defaultBranch = main
 [commit]
 	gpgsign = true
 [gpg]
-	program = /usr/bin/gpg
+	program = gpg
 [core]
 	editor = vim
 	autocrlf = input
 [pull]
 	rebase = false
-[credential]
-	helper = store
-	helper = 
-	helper = /usr/local/share/gcm-core/git-credential-manager-core
-	credentialStore = gpg
-[filter "lfs"]
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-[credential "https://dev.azure.com"]
-	useHttpPath = true
+[core]
+        excludesfile = ~/.gitignore
